@@ -7,19 +7,60 @@ import {
   Button,
   Typography,
   Box,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
+import AuthService from '../services/auth';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const validateForm = () => {
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Por favor, insira um email válido');
+      return false;
+    }
+
+    if (password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email.includes('manicure')) {
-      navigate('/manicurist');
-    } else {
-      navigate('/client');
+    setError('');
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await AuthService.login(email, password);
+      const user = response.user;
+
+      if (user.role === 'manicure') {
+        navigate('/manicurist');
+      } else {
+        navigate('/client');
+      }
+    } catch (error) {
+      setError(error.message || 'Erro ao fazer login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,6 +88,13 @@ function Login() {
           <Typography color="text.secondary" gutterBottom>
             Acesso exclusivo para manicures
           </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
           <form onSubmit={handleLogin}>
             <TextField
               fullWidth
@@ -55,6 +103,8 @@ function Login() {
               margin="normal"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              error={!!error}
             />
             <TextField
               fullWidth
@@ -64,6 +114,8 @@ function Login() {
               margin="normal"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              error={!!error}
             />
             <Button
               type="submit"
@@ -72,8 +124,9 @@ function Login() {
               fullWidth
               size="large"
               sx={{ mt: 3 }}
+              disabled={loading}
             >
-              Entrar
+              {loading ? <CircularProgress size={24} /> : 'Entrar'}
             </Button>
           </form>
         </Paper>

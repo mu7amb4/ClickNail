@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -9,6 +9,8 @@ import Login from './pages/Login';
 import ClientDashboard from './pages/ClientDashboard';
 import ManicuristDashboard from './pages/ManicuristDashboard';
 import ClientRegistration from './pages/ClientRegistration';
+import PrivateRoute from './components/PrivateRoute';
+import AuthService from './services/auth';
 
 const theme = createTheme({
   palette: {
@@ -35,12 +37,27 @@ function App() {
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
         <CssBaseline />
-        <Router>
+        <Router basename={import.meta.env.BASE_URL}>
           <Routes>
-            <Route path="/" element={<ClientDashboard />} />
-            <Route path="/admin" element={<Login />} />
-            <Route path="/manicurist" element={<ManicuristDashboard />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<ClientRegistration />} />
+            <Route
+              path="/client"
+              element={
+                <PrivateRoute>
+                  <ClientDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/manicurist"
+              element={
+                <PrivateRoute>
+                  <ManicuristDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </Router>
       </LocalizationProvider>
